@@ -1,7 +1,19 @@
 package fa7.antenas.joedoe
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.widget.Toast
+import com.google.android.gms.appindexing.AppIndex
+import com.google.android.gms.common.api.*
+import com.google.android.gms.location.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -13,14 +25,47 @@ import com.google.android.gms.maps.model.MarkerOptions
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
+    private lateinit var client: GoogleApiClient
+    private lateinit var locationRequest : LocationRequest
+    private lateinit var result : PendingResult<LocationSettingsResult>
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        client = GoogleApiClient.Builder(this).addApi(AppIndex.API).addApi(LocationServices.API).build()
         setContentView(R.layout.activity_maps)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        ask()
+
+    }
+
+    private fun askForPermission(permission:String, requestCode: Int){
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED){
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, permission)){
+                ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
+            }else{
+                ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
+            }
+        }else{
+            Toast.makeText(this, "" + permission + "is already granted", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun ask(){
+        askForPermission(Manifest.permission.ACCESS_FINE_LOCATION, 0x7)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(ActivityCompat.checkSelfPermission(this, permissions.get(0)) == PackageManager.PERMISSION_GRANTED){
+            askForGPS()
+            Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /**
@@ -34,10 +79,34 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val marker = mMap.addMarker(MarkerOptions().position(LatLng(0.0, 0.0)).title("Maker Position"))
+        try{
+            val locationListener : LocationListener = object : LocationListener {
+                override fun onLocationChanged(location : Location){
+                    val latLng = LatLng(location.latitude, location.longitude)
+                    marker.position = latLng
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
+                }
+                override fun onStatusChanged(provider:String, status:Int, extras:Bundle){}
+                override fun onProviderEnabled(provider:String){}
+                override fun onProviderDisabled(provider:String){}
+            }
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0.1f, locationListener)
+        }catch (ex:SecurityException){
+            Toast.makeText(this, ex.message, Toast.LENGTH_LONG).show()
+        }
+    }
 
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+    fun askForGPS(){
+        locationRequest = LocationRequest.create()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = 30*1000
+        locationRequest.fastestInterval = 5*1000
+        val builder: LocationSettingsRequest.Builder = LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest)
+                .setAlwaysShow(true)
+        result = LocationServices.SettingsApi.checkLocationSettings(client, builder.build())
+        result.setResultCallback { result -> var status = result.status }
     }
 }

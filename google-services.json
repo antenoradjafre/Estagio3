@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "1070153214041",
+    "firebase_url": "https://joedoe-1520895816465.firebaseio.com",
+    "project_id": "joedoe-1520895816465",
+    "storage_bucket": "joedoe-1520895816465.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1070153214041:android:7be884dd8dc1b10a",
+        "android_client_info": {
+          "package_name": "fa7.antenas.joedoe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1070153214041-tb81qvq07ca60prb0rbb5sujt5v4k7f2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbj7YLxWMlwfKVk455L33ssTqBLMYSeJQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
