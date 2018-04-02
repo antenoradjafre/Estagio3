@@ -10,34 +10,41 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
-import com.google.android.gms.appindexing.AppIndex
-import com.google.android.gms.common.api.*
 import com.google.android.gms.location.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.tasks.Task
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private lateinit var client: GoogleApiClient
     private lateinit var locationRequest : LocationRequest
-    private lateinit var result : PendingResult<LocationSettingsResult>
+    private lateinit var result : Task<LocationSettingsResponse>
+    private lateinit var txtKeyword : EditText
+    private lateinit var btnSearch : Button
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        client = GoogleApiClient.Builder(this).addApi(AppIndex.API).addApi(LocationServices.API).build()
+//        client = GoogleApiClient.Builder(this).addApi(AppIndex.API).addApi(LocationServices.API).build()
+
         setContentView(R.layout.activity_maps)
+
+        txtKeyword = findViewById(R.id.txtKeyword)
+        btnSearch = findViewById(R.id.btnSearch)
+        btnSearch.setOnClickListener { txtKeyword.setText("Worked") }
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
-        mapFragment.getMapAsync(this)
+//        val mapFragment = supportFragmentManager
+//                .findFragmentById(R.id.map) as SupportMapFragment
+//        mapFragment.getMapAsync(this)
         ask()
 
     }
@@ -54,7 +61,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    fun ask(){
+    private fun ask(){
         askForPermission(Manifest.permission.ACCESS_FINE_LOCATION, 0x7)
     }
 
@@ -98,7 +105,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    fun askForGPS(){
+    private fun askForGPS(){
         locationRequest = LocationRequest.create()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.interval = 30*1000
@@ -106,7 +113,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val builder: LocationSettingsRequest.Builder = LocationSettingsRequest.Builder()
                 .addLocationRequest(locationRequest)
                 .setAlwaysShow(true)
-        result = LocationServices.SettingsApi.checkLocationSettings(client, builder.build())
-        result.setResultCallback { result -> var status = result.status }
+        result = LocationServices.getSettingsClient(this).checkLocationSettings(builder.build())
     }
 }
