@@ -1,6 +1,7 @@
 package fa7.antenas.joedoe
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
@@ -15,38 +16,85 @@ import android.widget.EditText
 import android.widget.Toast
 import com.google.android.gms.location.*
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.Task
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
-    private lateinit var mMap: GoogleMap
+
+class MapsActivity : AppCompatActivity() {
+
     private lateinit var locationRequest : LocationRequest
     private lateinit var result : Task<LocationSettingsResponse>
     private lateinit var txtKeyword : EditText
     private lateinit var btnSearch : Button
+    private lateinit var locationManager : LocationManager
+    private lateinit var locationListener: LocationListener
+    private lateinit var gpsTracker : GPSTracker
+    private lateinit var start : LatLng
 
-
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        client = GoogleApiClient.Builder(this).addApi(AppIndex.API).addApi(LocationServices.API).build()
-
         setContentView(R.layout.activity_maps)
-
+        ask()
         txtKeyword = findViewById(R.id.txtKeyword)
         btnSearch = findViewById(R.id.btnSearch)
-        btnSearch.setOnClickListener { txtKeyword.setText("Worked") }
+        initializeListener()
+        requestLocation()
+        btnSearch.setOnClickListener {
+            if(start.longitude == 0.0){
+                txtKeyword.setText("Test")
+                requestLocation()
+            }else{
+                txtKeyword.setText("Longitude: " + start.longitude + " Latitude: " + start.latitude)
+            }
+             }
 
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-//        val mapFragment = supportFragmentManager
-//                .findFragmentById(R.id.map) as SupportMapFragment
-//        mapFragment.getMapAsync(this)
-        ask()
+    }
 
+    override fun onResume() {
+        super.onResume()
+
+        if (checkLocationPermission()) {
+            gpsTracker = GPSTracker(this)
+            if (gpsTracker.canGetLocation) {
+                start = LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude())
+            } else {
+                Toast.makeText(this, "Please accept permission !!!!", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+
+        }
+    }
+
+    private fun checkLocationPermission(): Boolean {
+        val permission = "android.permission.ACCESS_FINE_LOCATION"
+        val res = this.checkCallingOrSelfPermission(permission)
+        return res == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestLocation() {
+        try{
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10f, locationListener)
+        }catch (ex:SecurityException){
+            Toast.makeText(this, ex.message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun initializeListener() {
+        locationListener = object : LocationListener {
+            override fun onLocationChanged(location : Location){
+                start = LatLng(location.latitude, location.longitude)
+            }
+            override fun onStatusChanged(provider:String, status:Int, extras:Bundle){}
+            override fun onProviderEnabled(provider:String){}
+            override fun onProviderDisabled(provider:String){}
+        }
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    }
+
+    private fun ask(){
+        askForPermission(Manifest.permission.ACCESS_FINE_LOCATION, 0x7)
     }
 
     private fun askForPermission(permission:String, requestCode: Int){
@@ -61,10 +109,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun ask(){
-        askForPermission(Manifest.permission.ACCESS_FINE_LOCATION, 0x7)
-    }
-
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray){
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(ActivityCompat.checkSelfPermission(this, permissions.get(0)) == PackageManager.PERMISSION_GRANTED){
@@ -72,36 +116,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             Toast.makeText(this, "Permission Granted", Toast.LENGTH_SHORT).show()
         }else{
             Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-    override fun onMapReady(googleMap: GoogleMap) {
-        mMap = googleMap
-        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val marker = mMap.addMarker(MarkerOptions().position(LatLng(0.0, 0.0)).title("Maker Position"))
-        try{
-            val locationListener : LocationListener = object : LocationListener {
-                override fun onLocationChanged(location : Location){
-                    val latLng = LatLng(location.latitude, location.longitude)
-                    marker.position = latLng
-                    mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng))
-                }
-                override fun onStatusChanged(provider:String, status:Int, extras:Bundle){}
-                override fun onProviderEnabled(provider:String){}
-                override fun onProviderDisabled(provider:String){}
-            }
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0.1f, locationListener)
-        }catch (ex:SecurityException){
-            Toast.makeText(this, ex.message, Toast.LENGTH_LONG).show()
         }
     }
 
