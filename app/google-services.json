@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1008399269730",
+    "firebase_url": "https://joedoe-82a7f.firebaseio.com",
+    "project_id": "joedoe-82a7f",
+    "storage_bucket": "joedoe-82a7f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1008399269730:android:7be884dd8dc1b10a",
+        "android_client_info": {
+          "package_name": "fa7.antenas.joedoe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1008399269730-v0fm5bcn2i654g5021ebk8tlurdq0ejj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "fa7.antenas.joedoe",
+            "certificate_hash": "04f20df16f7e1a33d4d9cc16155aab6e85065ae1"
+          }
+        },
+        {
+          "client_id": "1008399269730-u3jodqrhhvms7207dfcqqi1l5vvb3q49.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnFrPdaO1CjZwIj6Ca_ZTj28Bo-jf5cDQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1008399269730-u3jodqrhhvms7207dfcqqi1l5vvb3q49.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

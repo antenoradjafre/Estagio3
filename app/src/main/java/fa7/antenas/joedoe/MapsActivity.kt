@@ -4,9 +4,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
+import android.location.*
 import android.location.LocationListener
-import android.location.LocationManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -18,7 +17,9 @@ import com.google.android.gms.location.*
 
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
-
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.FirebaseDatabase
+import java.util.*
 
 
 class MapsActivity : AppCompatActivity() {
@@ -30,26 +31,36 @@ class MapsActivity : AppCompatActivity() {
     private lateinit var locationManager : LocationManager
     private lateinit var locationListener: LocationListener
     private lateinit var gpsTracker : GPSTracker
-    private lateinit var start : LatLng
+    private lateinit var myLatLng : LatLng
+    private lateinit var database : FirebaseDatabase
+    private lateinit var foundLocation : fa7.antenas.joedoe.domain.Location
+    private lateinit var addresses : List<Address>
+    private lateinit var geocoder : Geocoder
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        FirebaseApp.initializeApp(this)
+        initFirebase()
         ask()
         txtKeyword = findViewById(R.id.txtKeyword)
         btnSearch = findViewById(R.id.btnSearch)
         initializeListener()
         requestLocation()
         btnSearch.setOnClickListener {
-            if(start.longitude == 0.0){
-                txtKeyword.setText("Test")
-                requestLocation()
-            }else{
-                txtKeyword.setText("Longitude: " + start.longitude + " Latitude: " + start.latitude)
-            }
+                geocoder = Geocoder(this, Locale.getDefault())
+                foundLocation = fa7.antenas.joedoe.domain.Location()
+                foundLocation.setName("Barneys")
+                foundLocation.setFormattedAddress("Rua Dona Maria Tomásia, 740 - Aldeota, Fortaleza")
+                addresses = geocoder.getFromLocationName(foundLocation.getFormattedAddress(),1)
+            addresses[0]
              }
 
+    }
+
+    private fun initFirebase() {
+        database = FirebaseDatabase.getInstance()
     }
 
     override fun onResume() {
@@ -58,7 +69,7 @@ class MapsActivity : AppCompatActivity() {
         if (checkLocationPermission()) {
             gpsTracker = GPSTracker(this)
             if (gpsTracker.canGetLocation) {
-                start = LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude())
+                myLatLng = LatLng(gpsTracker.getLatitude(), gpsTracker.getLongitude())
             } else {
                 Toast.makeText(this, "Please accept permission !!!!", Toast.LENGTH_SHORT).show()
                 finish()
@@ -84,7 +95,7 @@ class MapsActivity : AppCompatActivity() {
     private fun initializeListener() {
         locationListener = object : LocationListener {
             override fun onLocationChanged(location : Location){
-                start = LatLng(location.latitude, location.longitude)
+                myLatLng = LatLng(location.latitude, location.longitude)
             }
             override fun onStatusChanged(provider:String, status:Int, extras:Bundle){}
             override fun onProviderEnabled(provider:String){}
